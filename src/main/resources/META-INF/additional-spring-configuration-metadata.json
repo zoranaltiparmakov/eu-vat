@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "api.json_vat",
+      "type": "java.lang.String",
+      "description": "Description for api.json_vat."
+  }
+] }

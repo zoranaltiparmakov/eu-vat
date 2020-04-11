@@ -1,0 +1,122 @@
+{
+	"info": {
+		"_postman_id": "96e68938-030b-42ef-953d-98bceae2d475",
+		"name": "EuVat",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Low Vat Countries",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{API}}/eu-vat?vat=low",
+					"host": [
+						"{{API}}"
+					],
+					"path": [
+						"eu-vat"
+					],
+					"query": [
+						{
+							"key": "vat",
+							"value": "low"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "High Vat Countries",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{API}}/eu-vat?vat=low",
+					"host": [
+						"{{API}}"
+					],
+					"path": [
+						"eu-vat"
+					],
+					"query": [
+						{
+							"key": "vat",
+							"value": "low"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "All Vat Countries",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{API}}/eu-vat?vat=low",
+					"host": [
+						"{{API}}"
+					],
+					"path": [
+						"eu-vat"
+					],
+					"query": [
+						{
+							"key": "vat",
+							"value": "low"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "b12edfb6-493e-4ade-81b0-44de63ed54f1",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "94091b25-5d52-4021-a454-945e15249d2f",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
