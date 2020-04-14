@@ -1,65 +1,67 @@
 package com.altiparmakov.vateu.service;
 
 import com.altiparmakov.vateu.handler.EuVatHandler;
-import com.altiparmakov.vateu.util.VatParam;
 import com.altiparmakov.vateu.model.ApiModel;
 import com.altiparmakov.vateu.model.EuVat;
 import com.altiparmakov.vateu.model.EuVatDto;
+import com.altiparmakov.vateu.model.VatParam;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service that keeps logic for {@link EuVatHandler}.
  */
+@Slf4j
 @Service
 public class EuVatService {
 
     /**
-     * Number of elements in the resulting object.
+     * Number of elements in the resulting collection.
      */
     private static final int NUM_ELEMENTS = 3;
 
     /**
-     * Returns rates based on vat query parameter.
+     * Returns rates based on vat query parameter, and sorts them appropriately.
      *
      * @param apiModel {@link ApiModel} object
      * @param vatParam query parameter
      * @return collection of rates
      */
     public Collection<EuVatDto> getRates(ApiModel apiModel, String vatParam) {
-        Collection<EuVatDto> vatApiResponse = getRates(apiModel);
+        // Extracts only rates from ApiModel and converts them to stream of {@link EuVatDto} objects.
+        Stream<EuVatDto> vatRatesStream = apiModel.getRates()
+                .parallelStream()
+                .map(this::convertToDto);
 
         if (vatParam.equalsIgnoreCase(VatParam.LOW.getValue())) {
-            vatApiResponse = vatApiResponse.stream()
+            // Ascending sort.
+            vatRatesStream = vatRatesStream
                     .sorted(Comparator.comparingDouble(EuVatDto::getStandardVat))
-                    .limit(NUM_ELEMENTS)
-                    .collect(Collectors.toList());
+                    .limit(NUM_ELEMENTS);
         } else if (vatParam.equalsIgnoreCase(VatParam.HIGH.getValue())) {
-            vatApiResponse = vatApiResponse.stream()
+            // Descending sort.
+            vatRatesStream = vatRatesStream
                     .sorted(Comparator.comparingDouble(EuVatDto::getStandardVat).reversed())
-                    .limit(NUM_ELEMENTS)
-                    .collect(Collectors.toList());
+                    .limit(NUM_ELEMENTS);
         }
 
-        return vatApiResponse;
+        return vatRatesStream.collect(Collectors.toList());
     }
 
     /**
-     * Returns all rates.
+     * Overloading method for {@link #getRates(ApiModel, String)} when all rates need to be returned.
      *
-     * @param apiModel api model
-     * @return collection of {@link EuVatDto} objects
+     * @param apiModel {@link ApiModel object}
+     * @return collection of vat rates
      */
     public Collection<EuVatDto> getRates(ApiModel apiModel) {
-        return apiModel.getRates().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return getRates(apiModel, "");
     }
 
     /**
@@ -73,35 +75,15 @@ public class EuVatService {
         vatDto.setCode(euVat.getCode());
         vatDto.setName(euVat.getName());
 
-        Collection<EuVat.Period> periods = euVat.getPeriods();
-        Optional<Date> latestEffectivePeriod = getLatestEffectivePeriod(periods);
-
-        EuVat.Period period = periods.iterator().next();
-        Iterator<EuVat.Period> periodIterator = periods.iterator();
-
-        // Loops through the periods if has multiple, and assigns the last in effect to the period variable.
-        if (latestEffectivePeriod.isPresent() && periods.size() > 1) {
-            while (periodIterator.hasNext()) {
-                if (periodIterator.next().getEffectiveFrom().equals(latestEffectivePeriod.get())) {
-                    period = periodIterator.next();
-                }
-            }
-        }
-
-        vatDto.setStandardVat(period.getRates().getStandard());
+        // Get latest effective date from periods.
+        Optional<EuVat.Period> period = euVat.getPeriods()
+                .stream()
+                .max(Comparator.comparing(EuVat.Period::getEffectiveFrom));
+        // Set standard vat or set NaN if no standard vat for that period exists.
+        period.ifPresentOrElse(
+                value -> vatDto.setStandardVat(value.getRates().getStandard()),
+                () -> vatDto.setStandardVat(Double.NaN));
 
         return vatDto;
-    }
-
-    /**
-     * Returns date of the latest effective period.
-     *
-     * @param periods collection of periods
-     * @return {@link Optional} date
-     */
-    private Optional<Date> getLatestEffectivePeriod(Collection<EuVat.Period> periods) {
-        return periods.stream()
-                .map(EuVat.Period::getEffectiveFrom)
-                .max(Date::compareTo);
     }
 }

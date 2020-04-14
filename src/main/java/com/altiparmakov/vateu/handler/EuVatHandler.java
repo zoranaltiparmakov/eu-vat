@@ -3,6 +3,7 @@ package com.altiparmakov.vateu.handler;
 import com.altiparmakov.vateu.model.ApiModel;
 import com.altiparmakov.vateu.model.EuVatDto;
 import com.altiparmakov.vateu.service.EuVatService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +22,7 @@ import java.util.Optional;
 /**
  * Handler for Eu Vat REST API calls.
  */
+@Slf4j
 @Component
 public class EuVatHandler {
 
@@ -62,24 +64,28 @@ public class EuVatHandler {
      * @return JSON response as list of {@link EuVatDto} objects
      */
     public Mono<ServerResponse> getRates(ServerRequest request) {
-        Optional<String> vatParam = request.queryParam("vat");
+        final Optional<String> vatParam = request.queryParam("vat");
 
-        final ApiModel apiResponse;
+        final ApiModel response;
         try {
-            apiResponse = restTemplate.getForObject(VAT_API, ApiModel.class);
+            response = restTemplate.getForObject(VAT_API, ApiModel.class);
         } catch (RestClientException restClientException) {
-            throw new HttpServerErrorException(HttpStatus.BAD_REQUEST);
+            log.error("Server at {} can't be reached.", VAT_API);
+            throw new HttpServerErrorException(HttpStatus.BAD_GATEWAY,
+                    "Can't connect to remote server. It may be down.");
         }
 
-        if (apiResponse == null) {
-            throw new HttpServerErrorException(HttpStatus.BAD_GATEWAY);
+        if (response == null) {
+            log.error("Response object is null.");
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error while processing the request.");
         }
 
         Collection<EuVatDto> rates;
         if (vatParam.isPresent()) {
-            rates = euVatService.getRates(apiResponse, vatParam.get());
+            rates = euVatService.getRates(response, vatParam.get());
         } else {
-            rates = euVatService.getRates(apiResponse);
+            rates = euVatService.getRates(response);
         }
 
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)

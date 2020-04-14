@@ -33,6 +33,5 @@ public class EuVatHandlerTest {
                 .accept(MediaType.APPLICATION_JSON).exchange()
                 .expectStatus().isOk()
                 .expectBodyList(EuVatDto.class).hasSize(3);
-
     }
 }

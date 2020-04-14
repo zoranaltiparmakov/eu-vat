@@ -1,4 +1,4 @@
-package com.altiparmakov.vateu.util;
+package com.altiparmakov.vateu.model;
 
 /**
  * Enumerator for query parameters used for VAT.
